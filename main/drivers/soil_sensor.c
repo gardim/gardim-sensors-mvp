@@ -1,5 +1,6 @@
 #include <soil_sensor.h>
 #include <mqtt_esp32.h>
+#include <utils.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -12,17 +13,6 @@
 #define MQTT_SUBSCRIBED_BIT BIT2
 
 extern QueueHandle_t mqtt_queue;
-
-long map_function(long x, long in_min, long in_max, long out_min, long out_max) 
-{
-    const long dividend = out_max - out_min;
-    const long divisor = in_max - in_min;
-    const long delta = x - in_min;
-    if(divisor == 0){
-        return -1; 
-    }
-    return (delta * dividend + (divisor / 2)) / divisor + out_min;
-}
 
 void soil_sensor_init(void *pvParameters)
 {
@@ -44,7 +34,10 @@ void soil_sensor_init(void *pvParameters)
 
     while(1) {
         int soil_adc = adc1_get_raw(ADC1_CHANNEL_0);
-        long soil_percent = map_function(soil_adc, MAX_ANALOG_VALUE, MIN_ANALOG_VALUE, MIN_PERCENT_VALUE, MAX_PERCENT_VALUE);
+        if (soil_adc < MIN_ANALOG_SOIL_VALUE) {
+            soil_adc = MIN_ANALOG_SOIL_VALUE;
+        }
+        long soil_percent = map_function(soil_adc, MAX_ANALOG_SOIL_VALUE, MIN_ANALOG_SOIL_VALUE, MIN_PERCENT_VALUE, MAX_PERCENT_VALUE);
         payload.data = soil_percent;
         xQueueSend(mqtt_queue, (void *) &payload, (TickType_t) 10); 
         vTaskDelay(1000/portTICK_PERIOD_MS);

@@ -1,5 +1,6 @@
 #include <lux_sensor.h>
 #include <mqtt_esp32.h>
+#include <utils.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -81,7 +82,10 @@ void lux_sensor_init(void *pvParameters)
         if(!ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_read_from_device(I2C_MASTER_NUM, BH1750_I2C_ADDRESS, data, sizeof(data), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS))){
             luxInBytes = data[0] << 8 | data[1];
             luxConverted = luxInBytes / BH1750_CONV_FACTOR;
-            payload.data = (long)luxConverted;
+            if ((long)luxConverted > MAX_LUX_VALUE) {
+                luxConverted = MAX_LUX_VALUE;
+            }
+            payload.data = map_function((long)luxConverted, MIN_LUX_VALUE, MAX_LUX_VALUE, MIN_PERCENT_VALUE, MAX_PERCENT_VALUE);
             xQueueSend(mqtt_queue, (void *) &payload, (TickType_t) 10); 
         } else{
             /*

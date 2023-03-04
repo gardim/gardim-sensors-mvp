@@ -28,6 +28,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
      * esp_mqtt_client_handle_t client = event->client;
      * int msg_id;
      */ 
+    esp_mqtt_client_handle_t client = event->client;
     if(retries > 10) {
         esp_restart();
     }
@@ -88,9 +89,9 @@ void mqtt_init(void *p1)
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address = {
-                .hostname = CONFIG_BROKER_ADDRESS,
-                .port = 1883,
-                .transport = MQTT_TRANSPORT_OVER_TCP,
+                .hostname = CONFIG_HOST_ADDRESS,
+                .port = 8080,
+                .transport = MQTT_TRANSPORT_OVER_WS,
             },
         },
     };
@@ -107,7 +108,7 @@ void mqtt_init(void *p1)
         xQueueReceive(mqtt_queue, (void *)&payload, portMAX_DELAY);
         char *message = malloc(sizeof(payload.data));
         sprintf(message, "%ld", payload.data);
-        esp_mqtt_client_publish(client, payload.topic, message, sizeof(payload.data), 0, 0);
+        esp_mqtt_client_publish(client, payload.topic, (const char *)message, sizeof(payload.data), 0, 0);
         free(message);
     }
 }

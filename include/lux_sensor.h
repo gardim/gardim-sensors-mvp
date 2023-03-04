@@ -15,6 +15,9 @@
 #define HIGH_BIT_MEASUREMENT_TIME   0x08 << 3
 #define LOW_BIT_MEASUREMENT_TIME    0x03 << 5
 
+#define MAX_LUX_VALUE    9000
+#define MIN_LUX_VALUE    0
+
 typedef enum LuxMode {
     UNCONFIGURED =                  0,
     CONTINUOUS_HIGH_RES_MODE =      0x10,
